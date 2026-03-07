@@ -321,10 +321,11 @@ function ScrollSequenceSection() {
     if (!canvas || !img || !img.complete) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // 물리 픽셀 기준으로 계산 (DPR scale 변환 없이 직접 물리 픽셀에 그림)
     const cw = canvas.width, ch = canvas.height;
     const iw = img.naturalWidth, ih = img.naturalHeight;
-    // cover: 컨테이너를 꽉 채움 (이미지 AR에 맞게 컨테이너 높이를 설정했으므로 빈틈 없음)
     const scale = Math.max(cw / iw, ch / ih);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // 변환 초기화
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
   }, []);
@@ -364,8 +365,7 @@ function ScrollSequenceSection() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.scale(dpr, dpr);
+      // ctx.scale은 사용하지 않음 — drawFrame이 물리 픽셀 직접 사용
       drawFrame(frameRef.current);
     };
     resize();
