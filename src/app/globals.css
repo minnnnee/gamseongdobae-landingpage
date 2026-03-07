@@ -21,7 +21,7 @@ html {
 }
 
 body {
-  background-color: var(--cream);
+  background-color: #0D0705;
   color: var(--warm-brown);
   font-family: 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -334,7 +334,7 @@ function ScrollSequenceSection() {
     const isMobile = window.innerWidth < 640;
     const total = isMobile ? TOTAL_MOBILE : TOTAL_FULL;
     totalRef.current = total;
-    setScrollHeight(isMobile ? "300vh" : "600vh");
+    setScrollHeight(isMobile ? "400vh" : "600vh");
 
     // 모바일: 0~79에서 30개 균등 샘플링
     const indices = isMobile
@@ -351,15 +351,7 @@ function ScrollSequenceSection() {
         count++;
         setLoadPct(count / total);
         if (count === total) setReady(true);
-        if (slotIdx === 0) {
-          // 모바일: 이미지 AR에 맞게 컨테이너 높이 조정 → cover 모드에서 빈틈 제로
-          if (isMobile && stickyRef.current) {
-            const ar = img.naturalWidth / img.naturalHeight;
-            const h = Math.min(window.innerHeight, window.innerWidth / ar);
-            stickyRef.current.style.height = `${h}px`;
-          }
-          drawFrame(0);
-        }
+        if (slotIdx === 0) drawFrame(0);
       };
     });
   }, [drawFrame]);
@@ -407,8 +399,8 @@ function ScrollSequenceSection() {
   }, [drawFrame]);
 
   return (
-    <div ref={sectionRef} style={{ height: scrollHeight }}>
-      <div ref={stickyRef} className="sticky top-0 h-[67vh] sm:h-screen overflow-hidden bg-[#0D0705]">
+    <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
+      <div ref={stickyRef} className="sticky top-0 h-screen overflow-hidden bg-[#0D0705]" style={{ height: "100svh" }}>
 
         {/* 로딩 화면 */}
         {!ready && (
