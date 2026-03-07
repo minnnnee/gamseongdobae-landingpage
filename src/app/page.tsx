@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 
 const PHONE = "010-3322-1992";
 const KAKAO_CHANNEL = "https://pf.kakao.com/_zHwMn";
@@ -303,7 +302,7 @@ function ScrollSequenceSection() {
   const TOTAL_MOBILE = 30;
 
   const sectionRef = useRef<HTMLDivElement>(null);
-  const fixedRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
@@ -314,10 +313,23 @@ function ScrollSequenceSection() {
   const [loadPct, setLoadPct] = useState(0);
   const [ready, setReady] = useState(false);
   const [scrollHeight, setScrollHeight] = useState("600vh");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
-  // img src 교체 — canvas 불필요, object-fit:cover가 알아서 꽉 채움
+  // sticky 컨테이너 높이를 window.innerHeight로 설정 (iOS Safari 100vh 버그 회피)
+  useEffect(() => {
+    const updateHeight = () => {
+      if (stickyRef.current) {
+        stickyRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    window.addEventListener("orientationchange", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.removeEventListener("orientationchange", updateHeight);
+    };
+  }, []);
+
   const showFrame = useCallback((frame: number) => {
     const src = srcsRef.current[frame];
     if (!src || !imgRef.current) return;
@@ -353,13 +365,10 @@ function ScrollSequenceSection() {
   useEffect(() => {
     const onScroll = () => {
       const section = sectionRef.current;
-      const fixed = fixedRef.current;
-      if (!section || !fixed) return;
+      if (!section) return;
       const rect = section.getBoundingClientRect();
       const vh = window.innerHeight;
-      const active = rect.top <= 0 && rect.bottom > vh;
-      fixed.style.display = active ? "block" : "none";
-      if (!active) return;
+      if (rect.top > 0 || rect.bottom <= 0) return;
       const total = totalRef.current;
       const p = Math.max(0, Math.min(1, -rect.top / (rect.height - vh)));
       const frame = Math.min(total - 1, Math.floor(p * total));
@@ -376,85 +385,75 @@ function ScrollSequenceSection() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [showFrame]);
 
-  const overlayEl = (
-    <div
-      ref={fixedRef}
-      style={{
-        position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        zIndex: 20,
-        background: "#0D0705",
-        overflow: "hidden",
-        display: "none",
-        transform: "translateZ(0)",
-      }}
-    >
-      {!ready && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0D0705]">
-          <p className="text-white/20 text-[10px] tracking-[0.4em] uppercase mb-5">Loading</p>
-          <div className="w-56 h-[1px] bg-white/8 relative overflow-hidden">
-            <div className="absolute inset-y-0 left-0 transition-all duration-150"
-              style={{ width: `${loadPct * 100}%`, background: "linear-gradient(90deg, #C4714A, #C9A96E)" }} />
-          </div>
-          <p className="text-white/15 text-[10px] mt-3">{Math.round(loadPct * 100)}%</p>
-        </div>
-      )}
-      <img
-        ref={imgRef}
-        alt=""
+  return (
+    <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
+      {/* sticky: 스크롤하는 동안 화면 상단에 고정, 높이는 JS로 window.innerHeight 적용 */}
+      <div
+        ref={stickyRef}
         style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0, bottom: 0,
+          position: "sticky",
+          top: 0,
           width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "center",
+          overflow: "hidden",
+          background: "#0D0705",
         }}
-      />
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0"
-          style={{ background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
-        <div className="absolute top-0 inset-x-0 h-32"
-          style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.4), transparent)" }} />
-        <div className="absolute bottom-0 inset-x-0 h-40"
-          style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.6), transparent)" }} />
-        <div className="absolute top-8 left-8">
-          <p className="text-white/30 text-[10px] tracking-[0.35em] uppercase">감성도배 · 시공 스토리</p>
-        </div>
-        <div ref={labelBeforeRef} className="absolute bottom-20 left-8 transition-opacity duration-500" style={{ opacity: 1 }}>
-          <p className="text-white/40 text-[9px] tracking-[0.3em] uppercase mb-1">Before</p>
-          <p className="text-white/70 font-black text-2xl sm:text-3xl leading-tight">시공 전</p>
-        </div>
-        <div ref={labelAfterRef} className="absolute bottom-20 left-8 transition-opacity duration-500" style={{ opacity: 0 }}>
-          <p className="text-[9px] tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(201,169,110,0.7)" }}>After</p>
-          <p className="font-black text-2xl sm:text-3xl leading-tight"
-            style={{ background: "linear-gradient(135deg, #C4714A, #C9A96E)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-            감성도배 후
-          </p>
-        </div>
-        <div className="absolute top-8 right-8 text-right">
-          <p className="text-white/15 text-[9px] tracking-widest uppercase">Scroll to experience</p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/8">
-          <div ref={progressBarRef} className="h-full w-0"
-            style={{ background: "linear-gradient(90deg, #C4714A, #C9A96E)", transition: "width 0.05s linear" }} />
-        </div>
-        <div className="absolute bottom-8 right-8 flex flex-col items-center gap-1.5 animate-bounce">
-          <span className="text-white/20 text-[9px] tracking-[0.3em] uppercase">Scroll</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+      >
+        {!ready && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0D0705" }}>
+            <p className="text-white/20 text-[10px] tracking-[0.4em] uppercase mb-5">Loading</p>
+            <div className="w-56 h-[1px] bg-white/8 relative overflow-hidden">
+              <div className="absolute inset-y-0 left-0 transition-all duration-150"
+                style={{ width: `${loadPct * 100}%`, background: "linear-gradient(90deg, #C4714A, #C9A96E)" }} />
+            </div>
+            <p className="text-white/15 text-[10px] mt-3">{Math.round(loadPct * 100)}%</p>
+          </div>
+        )}
+        <img
+          ref={imgRef}
+          alt=""
+          style={{
+            position: "absolute",
+            top: 0, left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
+            display: "block",
+          }}
+        />
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "8rem", background: "linear-gradient(180deg, rgba(0,0,0,0.4), transparent)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "10rem", background: "linear-gradient(0deg, rgba(0,0,0,0.6), transparent)" }} />
+          <div style={{ position: "absolute", top: "2rem", left: "2rem" }}>
+            <p className="text-white/30 text-[10px] tracking-[0.35em] uppercase">감성도배 · 시공 스토리</p>
+          </div>
+          <div ref={labelBeforeRef} style={{ position: "absolute", bottom: "5rem", left: "2rem", opacity: 1, transition: "opacity 0.5s" }}>
+            <p className="text-white/40 text-[9px] tracking-[0.3em] uppercase mb-1">Before</p>
+            <p className="text-white/70 font-black text-2xl sm:text-3xl leading-tight">시공 전</p>
+          </div>
+          <div ref={labelAfterRef} style={{ position: "absolute", bottom: "5rem", left: "2rem", opacity: 0, transition: "opacity 0.5s" }}>
+            <p className="text-[9px] tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(201,169,110,0.7)" }}>After</p>
+            <p className="font-black text-2xl sm:text-3xl leading-tight"
+              style={{ background: "linear-gradient(135deg, #C4714A, #C9A96E)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              감성도배 후
+            </p>
+          </div>
+          <div style={{ position: "absolute", top: "2rem", right: "2rem", textAlign: "right" }}>
+            <p className="text-white/15 text-[9px] tracking-widest uppercase">Scroll to experience</p>
+          </div>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "2px", background: "rgba(255,255,255,0.08)" }}>
+            <div ref={progressBarRef} style={{ height: "100%", width: "0%", background: "linear-gradient(90deg, #C4714A, #C9A96E)", transition: "width 0.05s linear" }} />
+          </div>
+          <div style={{ position: "absolute", bottom: "2rem", right: "2rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem" }} className="animate-bounce">
+            <span className="text-white/20 text-[9px] tracking-[0.3em] uppercase">Scroll</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
-  );
-
-  return (
-    <>
-      <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]" />
-      {/* Portal로 document.body에 직접 마운트 → 부모 CSS 영향 완전 차단 */}
-      {mounted && createPortal(overlayEl, document.body)}
-    </>
   );
 }
 
