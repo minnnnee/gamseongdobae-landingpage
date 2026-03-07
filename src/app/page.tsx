@@ -248,17 +248,17 @@ function HeroSection({ onBooking }: { onBooking: () => void }) {
         </div>
 
         {/* 메인 헤드라인 */}
-        <h1 className="text-[48px] sm:text-[68px] md:text-[82px] font-black leading-[1.08] text-white mb-6 tracking-tight">
+        <h1 className="text-[34px] sm:text-[68px] md:text-[82px] font-black leading-[1.15] sm:leading-[1.08] text-white mb-6 tracking-tight" style={{ wordBreak: "keep-all" }}>
           <span style={{
             background: "linear-gradient(135deg, #C4714A 20%, #C9A96E 60%, #F5DDA8 100%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
           }}>
             당신이 꿈꾸던 분위기,
           </span><br />
-          <span className="text-white/80 text-[38px] sm:text-[52px] md:text-[62px] font-bold">도배 그 이상의 감성으로</span>
+          <span className="text-white/80 text-[26px] sm:text-[52px] md:text-[62px] font-bold">도배 그 이상의 감성으로</span>
         </h1>
 
-        <p className="text-white font-bold text-xl sm:text-2xl mb-10">
+        <p className="text-white font-bold text-base sm:text-2xl mb-10" style={{ wordBreak: "keep-all" }}>
           오늘 만나는 견적, 공간에 감성을 더하는 첫 걸음
         </p>
 
@@ -322,7 +322,9 @@ function ScrollSequenceSection() {
     if (!ctx) return;
     const cw = canvas.width, ch = canvas.height;
     const iw = img.naturalWidth, ih = img.naturalHeight;
-    const scale = Math.max(cw / iw, ch / ih);
+    // contain: 이미지 전체가 잘리지 않게 표시
+    const scale = Math.min(cw / iw, ch / ih);
+    ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
   }, []);
 
@@ -397,7 +399,7 @@ function ScrollSequenceSection() {
 
   return (
     <div ref={sectionRef} style={{ height: scrollHeight }}>
-      <div className="sticky top-0 h-screen overflow-hidden bg-[#0D0705]">
+      <div className="sticky top-0 h-[67vh] sm:h-screen overflow-hidden bg-[#0D0705]">
 
         {/* 로딩 화면 */}
         {!ready && (
