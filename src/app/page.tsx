@@ -357,15 +357,18 @@ function ScrollSequenceSection() {
     });
   }, [drawFrame]);
 
-  // 캔버스 크기 (DPR 대응)
+  // 캔버스 크기 (window.innerWidth/Height 직접 사용 — CSS 레이아웃 의존 제거)
   useEffect(() => {
     const resize = () => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      const sticky = stickyRef.current;
+      if (!canvas || !sticky) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
-      // ctx.scale은 사용하지 않음 — drawFrame이 물리 픽셀 직접 사용
+      sticky.style.height = `${h}px`;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       drawFrame(frameRef.current);
     };
     resize();
@@ -400,7 +403,7 @@ function ScrollSequenceSection() {
 
   return (
     <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
-      <div ref={stickyRef} className="sticky top-0 h-screen overflow-hidden bg-[#0D0705]" style={{ height: "100svh" }}>
+      <div ref={stickyRef} className="sticky top-0 overflow-hidden bg-[#0D0705]">
 
         {/* 로딩 화면 */}
         {!ready && (
