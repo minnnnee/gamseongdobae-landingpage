@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# 네이버 검색 봇
+User-agent: Yeti
+Allow: /
+
+# 네이버 GFA 크롤러
+User-agent: NaverBot
+Allow: /
+
+# 구글 봇
+User-agent: Googlebot
+Allow: /
+
+Sitemap: /sitemap.xml
