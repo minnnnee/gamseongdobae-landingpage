@@ -366,7 +366,11 @@ function ScrollSequenceSection() {
       const w = window.innerWidth;
       const h = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // 컨테이너 + 캔버스 CSS 크기 모두 JS로 직접 설정 (h-full 의존 제거)
+      sticky.style.width = `${w}px`;
       sticky.style.height = `${h}px`;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       drawFrame(frameRef.current);
