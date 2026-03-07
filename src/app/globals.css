@@ -25,6 +25,11 @@ body {
   color: var(--warm-brown);
   font-family: 'Noto Sans KR', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* overflow-x: hidden을 body에 쓰면 iOS Safari에서 fixed 요소 기준점이 뷰포트→body로 바뀌는 버그 발생
+   대신 html에 적용하거나 각 섹션에서 처리 */
+html {
   overflow-x: hidden;
 }
 
