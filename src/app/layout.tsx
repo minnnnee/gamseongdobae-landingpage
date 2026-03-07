@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: "감성도배 | 공간을 감성으로 채웁니다",
-  description: "15년 경력 전문 도배사. 아파트·상업공간·친환경 도배 전문. 무료 현장 방문·견적 제공. 지금 카카오로 바로 상담하세요.",
+  description: "아파트·상업공간·친환경 도배 전문. 무료 현장 방문·견적 제공. 지금 카카오로 바로 상담하세요.",
   keywords: [
     "도배", "도배업체", "아파트도배", "인테리어도배", "벽지시공",
     "친환경도배", "도배견적", "입주청소", "도배전문", "감성도배",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     url: BASE_URL,
     siteName: "감성도배",
     title: "감성도배 | 공간을 감성으로 채웁니다",
-    description: "15년 경력 전문 도배사. 무료 현장 방문·견적. 지금 바로 카카오 상담!",
+    description: "무료 현장 방문·견적. 지금 바로 카카오 상담!",
     images: [
       {
         url: "/opengraph-image",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "감성도배 | 공간을 감성으로 채웁니다",
-    description: "15년 경력 전문 도배사. 무료 현장 방문·견적. 지금 바로 카카오 상담!",
+    description: "무료 현장 방문·견적. 지금 바로 카카오 상담!",
     images: ["/opengraph-image"],
   },
 
