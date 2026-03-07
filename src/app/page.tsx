@@ -302,8 +302,8 @@ function ScrollSequenceSection() {
   const TOTAL_MOBILE = 30;
 
   const sectionRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
   const labelAfterRef = useRef<HTMLDivElement>(null);
@@ -332,23 +332,23 @@ function ScrollSequenceSection() {
     ctx.drawImage(imgEl, dx, dy, dw, dh);
   }, []);
 
-  // canvas 크기를 window.innerWidth/Height로 명시 설정 (DPR 대응)
+  // sticky 컨테이너 + canvas 크기 설정
   useEffect(() => {
     const setSize = () => {
-      const c = canvasRef.current;
-      const ov = overlayRef.current;
-      if (!c) return;
-      const dpr = window.devicePixelRatio || 1;
       const w = window.innerWidth;
       const h = window.innerHeight;
-      // 물리 픽셀 해상도
+      const dpr = window.devicePixelRatio || 1;
+      // 1) sticky div 높이를 JS로 직접 설정 (100dvh CSS fallback 보완)
+      if (stickyRef.current) {
+        stickyRef.current.style.height = `${h}px`;
+      }
+      // 2) canvas buffer = 물리 픽셀, CSS 크기 = 논리 픽셀
+      const c = canvasRef.current;
+      if (!c) return;
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
-      // CSS 렌더링 크기
       c.style.width = `${w}px`;
       c.style.height = `${h}px`;
-      // 오버레이도 동일 크기
-      if (ov) { ov.style.width = `${w}px`; ov.style.height = `${h}px`; }
       drawFrame(frameRef.current);
     };
     setSize();
@@ -411,9 +411,9 @@ function ScrollSequenceSection() {
   return (
     <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
       {/* sticky: canvas가 명시적 픽셀 크기를 가지므로 부모 height 불필요 */}
-      <div style={{ position: "sticky", top: 0, background: "#0D0705" }}>
+      <div ref={stickyRef} style={{ position: "sticky", top: 0, height: "100dvh", background: "#0D0705", overflow: "hidden" }}>
         {!ready && (
-          <div style={{ position: "absolute", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0D0705" }}>
+          <div style={{ position: "absolute", inset: 0, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0D0705" }}>
             <p className="text-white/20 text-[10px] tracking-[0.4em] uppercase mb-5">Loading</p>
             <div className="w-56 h-[1px] bg-white/8 relative overflow-hidden">
               <div className="absolute inset-y-0 left-0 transition-all duration-150"
@@ -422,10 +422,10 @@ function ScrollSequenceSection() {
             <p className="text-white/15 text-[10px] mt-3">{Math.round(loadPct * 100)}%</p>
           </div>
         )}
-        {/* canvas가 block으로 sticky div의 실제 높이를 결정 */}
+        {/* canvas: JS로 크기 설정, block으로 sticky 높이 결정 */}
         <canvas ref={canvasRef} style={{ display: "block" }} />
-        {/* 오버레이: canvas와 동일 크기로 JS에서 설정 */}
-        <div ref={overlayRef} style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
+        {/* 오버레이: sticky div 기준 inset:0 */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "8rem", background: "linear-gradient(180deg, rgba(0,0,0,0.4), transparent)" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "10rem", background: "linear-gradient(0deg, rgba(0,0,0,0.6), transparent)" }} />
