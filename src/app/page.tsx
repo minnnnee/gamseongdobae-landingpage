@@ -302,6 +302,7 @@ function ScrollSequenceSection() {
   const TOTAL_MOBILE = 30;
 
   const sectionRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
@@ -322,8 +323,8 @@ function ScrollSequenceSection() {
     if (!ctx) return;
     const cw = canvas.width, ch = canvas.height;
     const iw = img.naturalWidth, ih = img.naturalHeight;
-    // contain: 이미지 전체가 잘리지 않게 표시
-    const scale = Math.min(cw / iw, ch / ih);
+    // cover: 컨테이너를 꽉 채움 (이미지 AR에 맞게 컨테이너 높이를 설정했으므로 빈틈 없음)
+    const scale = Math.max(cw / iw, ch / ih);
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
   }, []);
@@ -350,7 +351,15 @@ function ScrollSequenceSection() {
         count++;
         setLoadPct(count / total);
         if (count === total) setReady(true);
-        if (slotIdx === 0) drawFrame(0);
+        if (slotIdx === 0) {
+          // 모바일: 이미지 AR에 맞게 컨테이너 높이 조정 → cover 모드에서 빈틈 제로
+          if (isMobile && stickyRef.current) {
+            const ar = img.naturalWidth / img.naturalHeight;
+            const h = Math.min(window.innerHeight, window.innerWidth / ar);
+            stickyRef.current.style.height = `${h}px`;
+          }
+          drawFrame(0);
+        }
       };
     });
   }, [drawFrame]);
@@ -399,7 +408,7 @@ function ScrollSequenceSection() {
 
   return (
     <div ref={sectionRef} style={{ height: scrollHeight }}>
-      <div className="sticky top-0 h-[67vh] sm:h-screen overflow-hidden bg-[#0D0705]">
+      <div ref={stickyRef} className="sticky top-0 h-[67vh] sm:h-screen overflow-hidden bg-[#0D0705]">
 
         {/* 로딩 화면 */}
         {!ready && (
