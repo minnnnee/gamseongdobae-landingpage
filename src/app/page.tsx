@@ -52,6 +52,22 @@ function TikTokIcon() {
     </svg>
   );
 }
+function BlogIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm4 2v2h10V7H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/>
+    </svg>
+  );
+}
+function GlobeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+  );
+}
 
 /* ── 온라인 상담 모달 ── */
 function BookingModal({ onClose }: { onClose: () => void }) {
@@ -325,7 +341,7 @@ function ScrollSequenceSection() {
     if (!ctx) return;
     const iw = imgEl.naturalWidth, ih = imgEl.naturalHeight;
     const cw = c.width, ch = c.height;
-    const scale = Math.max(cw / iw, ch / ih);
+    const scale = Math.min(cw / iw, ch / ih);
     const dw = iw * scale, dh = ih * scale;
     const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
     ctx.clearRect(0, 0, cw, ch);
@@ -581,70 +597,22 @@ function SolutionSection({ onBooking }: { onBooking: () => void }) {
         <div className="text-center">
           <p className="text-[#5C4033] text-sm mb-5">결정 안 해도 됩니다. 그냥 물어보세요.</p>
           <CTAButtons onBooking={onBooking} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ══════════════════════════════════════
-   섹션 4: 신뢰 — 사회적 증거 + 권위
-   후기, 데이터, "남들도 다 했다"
-══════════════════════════════════════ */
-function TrustSection() {
-  const reviews = [
-    { name: "이**", location: "경기 남양주 호평동", tag: "거실 전체", text: "여자 도배사라고 해서 처음엔 의아했는데, 오히려 훨씬 꼼꼼하고 섬세하게 해주셨어요! 제가 원하는 분위기를 딱 알아채시고 완성해주셔서 너무 만족해요." },
-    { name: "박**", location: "경기 남양주 평내동", tag: "신축 입주", text: "입주 하루 전에 급하게 연락드렸는데 빠르게 일정 잡아주셨어요. 마감이 너무 깔끔하고 벽지 추천도 예쁘게 해주셔서 이사 오자마자 집이 아닌 것 같았어요 ㅎㅎ" },
-    { name: "김**", location: "경기 가평군", tag: "아이방 친환경", text: "아이 있어서 친환경 벽지 찾고 있었는데 제품 하나하나 설명해주시고 추천해주셔서 믿고 맡겼어요. 꼼꼼한 마감에 아이도 너무 좋아해요." },
-    { name: "최**", location: "서울 노원구", tag: "상업 시설", text: "학원 인테리어에 맞게 벽지 제안해주신 게 정말 좋았어요. 아이들도 환경이 바뀌니 더 집중도 잘 되는 것 같다고 하더라고요!" },
-  ];
-  return (
-    <section className="py-20 px-5" style={{ background: "linear-gradient(180deg, #F5EAD8 0%, #EDD4A8 100%)" }}>
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="text-[#C4714A] text-xs font-semibold tracking-widest uppercase mb-3">Real Reviews</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#2C1A0E] mb-3">실제 고객 후기</h2>
-          <div className="flex items-center justify-center gap-1 mb-2">
-            {[...Array(5)].map((_, i) => <span key={i} className="text-[#C4714A] text-lg">★</span>)}
-            <span className="text-[#2C1A0E] font-black ml-2 text-lg">4.9</span>
-            <span className="text-[#8C7B6B] text-sm ml-1">/ 5.0 (리뷰 80개+)</span>
+          <div className="mt-6 text-xs text-center">
+            <span className="text-[#8C7B6B]">더 많은 시공 사례 → </span>
+            <a href={SNS.instagram} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C4714A] underline underline-offset-2 hover:text-[#2C1A0E] transition-colors">인스타그램</a>
+            <span className="text-[#C4B0A0] mx-1">·</span>
+            <a href={SNS.tiktok} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C4714A] underline underline-offset-2 hover:text-[#2C1A0E] transition-colors">틱톡</a>
+            <span className="text-[#C4B0A0] mx-1">·</span>
+            <a href={SNS.blog} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C4714A] underline underline-offset-2 hover:text-[#2C1A0E] transition-colors">블로그</a>
+            <span className="text-[#C4B0A0] mx-1">·</span>
+            <a href={SNS.homepage} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C4714A] underline underline-offset-2 hover:text-[#2C1A0E] transition-colors">홈페이지</a>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {reviews.map((r) => (
-            <div key={r.name} className="bg-white rounded-2xl p-5 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all">
-              <div className="flex gap-0.5 mb-3">
-                {[...Array(5)].map((_, i) => <span key={i} className="text-[#C4714A] text-sm">★</span>)}
-              </div>
-              <p className="text-[#5C4033] text-sm leading-relaxed mb-4">&ldquo;{r.text}&rdquo;</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[#2C1A0E] font-semibold text-xs">{r.name}</span>
-                  <span className="text-[#8C7B6B] text-xs ml-2">{r.location}</span>
-                </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#F5EAD8] text-[#C4714A] font-medium">{r.tag}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p className="text-center mt-6 text-xs text-[#8C7B6B]">
-          더 많은 시공 사례 →
-          {[
-            { label: "인스타그램", href: SNS.instagram },
-            { label: "틱톡", href: SNS.tiktok },
-            { label: "블로그", href: SNS.blog },
-            { label: "홈페이지", href: SNS.homepage },
-          ].map((s) => (
-            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-              className="ml-2 text-[#C4714A] font-semibold underline underline-offset-2 hover:text-[#2C1A0E] transition-colors">{s.label}</a>
-          ))}
-        </p>
       </div>
     </section>
   );
 }
+
 
 /* ══════════════════════════════════════
    섹션 5: 최종 CTA — 결정 마비 극복
@@ -654,12 +622,6 @@ function FinalCTASection({ onBooking }: { onBooking: () => void }) {
   return (
     <section className="py-20 px-5 bg-[#2C1A0E]">
       <div className="max-w-2xl mx-auto text-center">
-        {/* 긴급성 */}
-        <div className="inline-flex items-center gap-2 bg-[#C4714A]/20 border border-[#C4714A]/30 rounded-full px-4 py-1.5 mb-6">
-          <span className="w-1.5 h-1.5 bg-[#C4714A] rounded-full animate-pulse" />
-          <span className="text-[#C9A96E] text-xs font-semibold">이번 달 잔여 일정 <strong className="text-[#FEE500]">3건</strong> 남음</span>
-        </div>
-
         {/* 로고 반복 노출 */}
         <p className="text-[#C9A96E] text-sm font-medium mb-3">감성도배 · Designing Spaces, Crafting Emotions</p>
         <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
@@ -695,8 +657,8 @@ function FinalCTASection({ onBooking }: { onBooking: () => void }) {
           <div className="flex gap-4 text-white/50">
             <a href={SNS.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs hover:text-[#FEE500] transition-colors"><InstagramIcon />인스타그램</a>
             <a href={SNS.tiktok} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs hover:text-[#FEE500] transition-colors"><TikTokIcon />틱톡</a>
-            <a href={SNS.blog} target="_blank" rel="noopener noreferrer" className="text-xs hover:text-[#FEE500] transition-colors font-medium">블로그</a>
-            <a href={SNS.homepage} target="_blank" rel="noopener noreferrer" className="text-xs hover:text-[#FEE500] transition-colors font-medium">홈페이지</a>
+            <a href={SNS.blog} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs hover:text-[#FEE500] transition-colors font-medium"><BlogIcon />블로그</a>
+            <a href={SNS.homepage} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs hover:text-[#FEE500] transition-colors font-medium"><GlobeIcon />홈페이지</a>
           </div>
         </div>
       </div>
@@ -727,7 +689,7 @@ export default function Home() {
       <ScrollSequenceSection />
       <PainSection onBooking={openBooking} />
       <SolutionSection onBooking={openBooking} />
-      <TrustSection />
+
       <FinalCTASection onBooking={openBooking} />
       <Footer />
     </>

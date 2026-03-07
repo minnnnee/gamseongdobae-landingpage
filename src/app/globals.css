@@ -27,10 +27,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* overflow-x: hidden을 body에 쓰면 iOS Safari에서 fixed 요소 기준점이 뷰포트→body로 바뀌는 버그 발생
-   대신 html에 적용하거나 각 섹션에서 처리 */
+/* overflow-x: clip = hidden과 동일하게 가로 스크롤 차단하지만
+   scroll container를 만들지 않아 position:sticky가 정상 작동 */
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Scrollbar */
