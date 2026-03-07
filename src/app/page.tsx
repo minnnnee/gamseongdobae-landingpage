@@ -377,13 +377,12 @@ function ScrollSequenceSection() {
     <>
       <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]" />
 
-      {/* position:fixed + 100vw/100vh → 항상 화면 꽉 채움, 부모 레이아웃 무관 */}
+      {/* inset:0 → vh 단위 무관, 뷰포트 4면을 직접 채움 (iOS Safari 100vh 버그 우회) */}
       <div
         ref={fixedRef}
         style={{
           position: "fixed",
-          top: 0, left: 0,
-          width: "100vw", height: "100vh",
+          top: 0, left: 0, right: 0, bottom: 0,
           zIndex: 20,
           background: "#0D0705",
           overflow: "hidden",
@@ -401,14 +400,15 @@ function ScrollSequenceSection() {
           </div>
         )}
 
-        {/* img + object-fit:cover → 이미지 비율 무관하게 화면 꽉 채움 */}
+        {/* absolute inset-0 → 부모(fixed) 4면을 꽉 채움 */}
         <img
           ref={imgRef}
           alt=""
           style={{
-            display: "block",
-            width: "100vw",
-            height: "100vh",
+            position: "absolute",
+            top: 0, left: 0, right: 0, bottom: 0,
+            width: "100%",
+            height: "100%",
             objectFit: "cover",
             objectPosition: "center",
           }}
