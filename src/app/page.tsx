@@ -303,35 +303,29 @@ function ScrollSequenceSection() {
 
   const sectionRef = useRef<HTMLDivElement>(null);
   const fixedRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
   const labelAfterRef = useRef<HTMLDivElement>(null);
   const totalRef = useRef(TOTAL_FULL);
-  const imgsRef = useRef<(HTMLImageElement | null)[]>(Array(TOTAL_FULL).fill(null));
+  const srcsRef = useRef<string[]>([]);
   const frameRef = useRef(0);
   const [loadPct, setLoadPct] = useState(0);
   const [ready, setReady] = useState(false);
   const [scrollHeight, setScrollHeight] = useState("600vh");
 
-  const drawFrame = useCallback((frame: number) => {
-    const canvas = canvasRef.current;
-    const img = imgsRef.current[frame];
-    if (!canvas || !img || !img.complete) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const cw = canvas.width, ch = canvas.height;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    const scale = Math.max(cw / iw, ch / ih);
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
+  // img src 교체 — canvas 불필요, object-fit:cover가 알아서 꽉 채움
+  const showFrame = useCallback((frame: number) => {
+    const src = srcsRef.current[frame];
+    if (!src || !imgRef.current) return;
+    if (imgRef.current.src !== src) imgRef.current.src = src;
   }, []);
 
-  // 이미지 프리로드
   useEffect(() => {
     const isMobile = window.innerWidth < 640;
     const total = isMobile ? TOTAL_MOBILE : TOTAL_FULL;
     totalRef.current = total;
+    srcsRef.current = new Array(total).fill("");
     setScrollHeight(isMobile ? "400vh" : "600vh");
 
     const indices = isMobile
@@ -341,34 +335,18 @@ function ScrollSequenceSection() {
     let count = 0;
     indices.forEach((srcIdx, slotIdx) => {
       const img = new Image();
-      const n = String(srcIdx).padStart(3, "0");
-      img.src = `/sequence/Wallpapering_before_and_after_crash_delpmaspu__${n}.jpg`;
+      const src = `/sequence/Wallpapering_before_and_after_crash_delpmaspu__${String(srcIdx).padStart(3, "0")}.jpg`;
+      img.src = src;
       img.onload = () => {
-        imgsRef.current[slotIdx] = img;
+        srcsRef.current[slotIdx] = src;
         count++;
         setLoadPct(count / total);
         if (count === total) setReady(true);
-        if (slotIdx === 0) drawFrame(0);
+        if (slotIdx === 0) showFrame(0);
       };
     });
-  }, [drawFrame]);
+  }, [showFrame]);
 
-  // 캔버스 해상도 설정 (fixed 요소라 vw/vh = 뷰포트 크기 그대로)
-  useEffect(() => {
-    const resize = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      drawFrame(frameRef.current);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, [drawFrame]);
-
-  // 스크롤 → fixed 표시/숨김 + 프레임 계산
   useEffect(() => {
     const onScroll = () => {
       const section = sectionRef.current;
@@ -384,7 +362,7 @@ function ScrollSequenceSection() {
       const frame = Math.min(total - 1, Math.floor(p * total));
       if (frame !== frameRef.current) {
         frameRef.current = frame;
-        drawFrame(frame);
+        showFrame(frame);
       }
       if (progressBarRef.current) progressBarRef.current.style.width = `${p * 100}%`;
       const isBefore = frame < total * 0.45;
@@ -393,20 +371,19 @@ function ScrollSequenceSection() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [drawFrame]);
+  }, [showFrame]);
 
   return (
     <>
-      {/* 스크롤 공간 — 이 div의 높이만큼 스크롤 가능 */}
       <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]" />
 
-      {/* Fixed 전체화면 캔버스 — position:fixed는 항상 뷰포트 100% */}
+      {/* position:fixed + 100vw/100vh → 항상 화면 꽉 채움, 부모 레이아웃 무관 */}
       <div
         ref={fixedRef}
         style={{
           position: "fixed",
           top: 0, left: 0,
-          width: "100%", height: "100%",
+          width: "100vw", height: "100vh",
           zIndex: 20,
           background: "#0D0705",
           overflow: "hidden",
@@ -424,8 +401,18 @@ function ScrollSequenceSection() {
           </div>
         )}
 
-        {/* 캔버스: fixed 부모의 100% = 뷰포트 100% */}
-        <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
+        {/* img + object-fit:cover → 이미지 비율 무관하게 화면 꽉 채움 */}
+        <img
+          ref={imgRef}
+          alt=""
+          style={{
+            display: "block",
+            width: "100vw",
+            height: "100vh",
+            objectFit: "cover",
+            objectPosition: "center",
+          }}
+        />
 
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0"
