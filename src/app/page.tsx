@@ -314,21 +314,6 @@ function ScrollSequenceSection() {
   const [ready, setReady] = useState(false);
   const [scrollHeight, setScrollHeight] = useState("600vh");
 
-  // sticky 컨테이너 높이를 window.innerHeight로 설정 (iOS Safari 100vh 버그 회피)
-  useEffect(() => {
-    const updateHeight = () => {
-      if (stickyRef.current) {
-        stickyRef.current.style.height = `${window.innerHeight}px`;
-      }
-    };
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    window.addEventListener("orientationchange", updateHeight);
-    return () => {
-      window.removeEventListener("resize", updateHeight);
-      window.removeEventListener("orientationchange", updateHeight);
-    };
-  }, []);
 
   const showFrame = useCallback((frame: number) => {
     const src = srcsRef.current[frame];
@@ -394,6 +379,7 @@ function ScrollSequenceSection() {
           position: "sticky",
           top: 0,
           width: "100%",
+          height: "100svh",
           overflow: "hidden",
           background: "#0D0705",
         }}
