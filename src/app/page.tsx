@@ -302,30 +302,69 @@ function ScrollSequenceSection() {
   const TOTAL_MOBILE = 30;
 
   const sectionRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
   const labelAfterRef = useRef<HTMLDivElement>(null);
   const totalRef = useRef(TOTAL_FULL);
-  const srcsRef = useRef<string[]>([]);
+  // img 객체를 직접 캐시 — src 문자열이 아닌 HTMLImageElement
+  const imgCacheRef = useRef<(HTMLImageElement | null)[]>([]);
   const frameRef = useRef(0);
   const [loadPct, setLoadPct] = useState(0);
   const [ready, setReady] = useState(false);
   const [scrollHeight, setScrollHeight] = useState("600vh");
 
-
-  const showFrame = useCallback((frame: number) => {
-    const src = srcsRef.current[frame];
-    if (!src || !imgRef.current) return;
-    if (imgRef.current.src !== src) imgRef.current.src = src;
+  // canvas에 이미지를 object-fit:cover 방식으로 그리기
+  const drawFrame = useCallback((frame: number) => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const imgEl = imgCacheRef.current[frame];
+    if (!imgEl) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const iw = imgEl.naturalWidth, ih = imgEl.naturalHeight;
+    const cw = c.width, ch = c.height;
+    const scale = Math.max(cw / iw, ch / ih);
+    const dw = iw * scale, dh = ih * scale;
+    const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(imgEl, dx, dy, dw, dh);
   }, []);
+
+  // canvas 크기를 window.innerWidth/Height로 명시 설정 (DPR 대응)
+  useEffect(() => {
+    const setSize = () => {
+      const c = canvasRef.current;
+      const ov = overlayRef.current;
+      if (!c) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // 물리 픽셀 해상도
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      // CSS 렌더링 크기
+      c.style.width = `${w}px`;
+      c.style.height = `${h}px`;
+      // 오버레이도 동일 크기
+      if (ov) { ov.style.width = `${w}px`; ov.style.height = `${h}px`; }
+      drawFrame(frameRef.current);
+    };
+    setSize();
+    window.addEventListener("resize", setSize);
+    window.addEventListener("orientationchange", setSize);
+    return () => {
+      window.removeEventListener("resize", setSize);
+      window.removeEventListener("orientationchange", setSize);
+    };
+  }, [drawFrame]);
 
   useEffect(() => {
     const isMobile = window.innerWidth < 640;
     const total = isMobile ? TOTAL_MOBILE : TOTAL_FULL;
     totalRef.current = total;
-    srcsRef.current = new Array(total).fill("");
+    imgCacheRef.current = new Array(total).fill(null);
     setScrollHeight(isMobile ? "400vh" : "600vh");
 
     const indices = isMobile
@@ -335,17 +374,16 @@ function ScrollSequenceSection() {
     let count = 0;
     indices.forEach((srcIdx, slotIdx) => {
       const img = new Image();
-      const src = `/sequence/Wallpapering_before_and_after_crash_delpmaspu__${String(srcIdx).padStart(3, "0")}.jpg`;
-      img.src = src;
+      img.src = `/sequence/Wallpapering_before_and_after_crash_delpmaspu__${String(srcIdx).padStart(3, "0")}.jpg`;
       img.onload = () => {
-        srcsRef.current[slotIdx] = src;
+        imgCacheRef.current[slotIdx] = img;
         count++;
         setLoadPct(count / total);
         if (count === total) setReady(true);
-        if (slotIdx === 0) showFrame(0);
+        if (slotIdx === 0) drawFrame(0);
       };
     });
-  }, [showFrame]);
+  }, [drawFrame]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -359,7 +397,7 @@ function ScrollSequenceSection() {
       const frame = Math.min(total - 1, Math.floor(p * total));
       if (frame !== frameRef.current) {
         frameRef.current = frame;
-        showFrame(frame);
+        drawFrame(frame);
       }
       if (progressBarRef.current) progressBarRef.current.style.width = `${p * 100}%`;
       const isBefore = frame < total * 0.45;
@@ -368,24 +406,14 @@ function ScrollSequenceSection() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [showFrame]);
+  }, [drawFrame]);
 
   return (
     <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
-      {/* sticky: 스크롤하는 동안 화면 상단에 고정, 높이는 JS로 window.innerHeight 적용 */}
-      <div
-        ref={stickyRef}
-        style={{
-          position: "sticky",
-          top: 0,
-          width: "100%",
-          height: "100svh",
-          overflow: "hidden",
-          background: "#0D0705",
-        }}
-      >
+      {/* sticky: canvas가 명시적 픽셀 크기를 가지므로 부모 height 불필요 */}
+      <div style={{ position: "sticky", top: 0, background: "#0D0705" }}>
         {!ready && (
-          <div style={{ position: "absolute", inset: 0, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0D0705" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0D0705" }}>
             <p className="text-white/20 text-[10px] tracking-[0.4em] uppercase mb-5">Loading</p>
             <div className="w-56 h-[1px] bg-white/8 relative overflow-hidden">
               <div className="absolute inset-y-0 left-0 transition-all duration-150"
@@ -394,20 +422,10 @@ function ScrollSequenceSection() {
             <p className="text-white/15 text-[10px] mt-3">{Math.round(loadPct * 100)}%</p>
           </div>
         )}
-        <img
-          ref={imgRef}
-          alt=""
-          style={{
-            position: "absolute",
-            top: 0, left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center",
-            display: "block",
-          }}
-        />
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {/* canvas가 block으로 sticky div의 실제 높이를 결정 */}
+        <canvas ref={canvasRef} style={{ display: "block" }} />
+        {/* 오버레이: canvas와 동일 크기로 JS에서 설정 */}
+        <div ref={overlayRef} style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "8rem", background: "linear-gradient(180deg, rgba(0,0,0,0.4), transparent)" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "10rem", background: "linear-gradient(0deg, rgba(0,0,0,0.6), transparent)" }} />
