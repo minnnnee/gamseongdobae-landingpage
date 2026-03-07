@@ -302,12 +302,11 @@ function ScrollSequenceSection() {
   const TOTAL_MOBILE = 30;
 
   const sectionRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
+  const fixedRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const labelBeforeRef = useRef<HTMLDivElement>(null);
   const labelAfterRef = useRef<HTMLDivElement>(null);
-  // 실제 로드된 프레임 수 (모바일/데스크탑에 따라 달라짐)
   const totalRef = useRef(TOTAL_FULL);
   const imgsRef = useRef<(HTMLImageElement | null)[]>(Array(TOTAL_FULL).fill(null));
   const frameRef = useRef(0);
@@ -321,23 +320,20 @@ function ScrollSequenceSection() {
     if (!canvas || !img || !img.complete) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // 물리 픽셀 기준으로 계산 (DPR scale 변환 없이 직접 물리 픽셀에 그림)
     const cw = canvas.width, ch = canvas.height;
     const iw = img.naturalWidth, ih = img.naturalHeight;
     const scale = Math.max(cw / iw, ch / ih);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // 변환 초기화
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, (cw - iw * scale) / 2, (ch - ih * scale) / 2, iw * scale, ih * scale);
   }, []);
 
-  // 이미지 프리로드 (모바일: 30장 균등 선택, 데스크탑: 80장 전체)
+  // 이미지 프리로드
   useEffect(() => {
     const isMobile = window.innerWidth < 640;
     const total = isMobile ? TOTAL_MOBILE : TOTAL_FULL;
     totalRef.current = total;
     setScrollHeight(isMobile ? "400vh" : "600vh");
 
-    // 모바일: 0~79에서 30개 균등 샘플링
     const indices = isMobile
       ? Array.from({ length: total }, (_, i) => Math.round(i * (TOTAL_FULL - 1) / (total - 1)))
       : Array.from({ length: total }, (_, i) => i);
@@ -357,22 +353,14 @@ function ScrollSequenceSection() {
     });
   }, [drawFrame]);
 
-  // 캔버스 크기 (window.innerWidth/Height 직접 사용 — CSS 레이아웃 의존 제거)
+  // 캔버스 해상도 설정 (fixed 요소라 vw/vh = 뷰포트 크기 그대로)
   useEffect(() => {
     const resize = () => {
       const canvas = canvasRef.current;
-      const sticky = stickyRef.current;
-      if (!canvas || !sticky) return;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      if (!canvas) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      // 컨테이너 + 캔버스 CSS 크기 모두 JS로 직접 설정 (h-full 의존 제거)
-      sticky.style.width = `${w}px`;
-      sticky.style.height = `${h}px`;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
       drawFrame(frameRef.current);
     };
     resize();
@@ -380,36 +368,51 @@ function ScrollSequenceSection() {
     return () => window.removeEventListener("resize", resize);
   }, [drawFrame]);
 
-  // 스크롤 → 프레임 계산 (직접 DOM 조작으로 최대 성능)
+  // 스크롤 → fixed 표시/숨김 + 프레임 계산
   useEffect(() => {
     const onScroll = () => {
-      if (!sectionRef.current) return;
+      const section = sectionRef.current;
+      const fixed = fixedRef.current;
+      if (!section || !fixed) return;
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const active = rect.top <= 0 && rect.bottom > vh;
+      fixed.style.visibility = active ? "visible" : "hidden";
+      if (!active) return;
       const total = totalRef.current;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1, -rect.top / (rect.height - window.innerHeight)));
+      const p = Math.max(0, Math.min(1, -rect.top / (rect.height - vh)));
       const frame = Math.min(total - 1, Math.floor(p * total));
-      if (frame === frameRef.current) return;
-      frameRef.current = frame;
-      drawFrame(frame);
-      // 프로그레스 바 직접 업데이트
-      if (progressBarRef.current)
-        progressBarRef.current.style.width = `${p * 100}%`;
-      // Before / After 레이블 전환
+      if (frame !== frameRef.current) {
+        frameRef.current = frame;
+        drawFrame(frame);
+      }
+      if (progressBarRef.current) progressBarRef.current.style.width = `${p * 100}%`;
       const isBefore = frame < total * 0.45;
-      if (labelBeforeRef.current)
-        labelBeforeRef.current.style.opacity = isBefore ? "1" : "0";
-      if (labelAfterRef.current)
-        labelAfterRef.current.style.opacity = isBefore ? "0" : "1";
+      if (labelBeforeRef.current) labelBeforeRef.current.style.opacity = isBefore ? "1" : "0";
+      if (labelAfterRef.current) labelAfterRef.current.style.opacity = isBefore ? "0" : "1";
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [drawFrame]);
 
   return (
-    <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]">
-      <div ref={stickyRef} className="sticky top-0 overflow-hidden bg-[#0D0705]">
+    <>
+      {/* 스크롤 공간 — 이 div의 높이만큼 스크롤 가능 */}
+      <div ref={sectionRef} style={{ height: scrollHeight }} className="bg-[#0D0705]" />
 
-        {/* 로딩 화면 */}
+      {/* Fixed 전체화면 캔버스 — position:fixed는 항상 뷰포트 100% */}
+      <div
+        ref={fixedRef}
+        style={{
+          position: "fixed",
+          top: 0, left: 0,
+          width: "100%", height: "100%",
+          zIndex: 20,
+          background: "#0D0705",
+          overflow: "hidden",
+          visibility: "hidden",
+        }}
+      >
         {!ready && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0D0705]">
             <p className="text-white/20 text-[10px] tracking-[0.4em] uppercase mb-5">Loading</p>
@@ -421,54 +424,37 @@ function ScrollSequenceSection() {
           </div>
         )}
 
-        {/* 캔버스 */}
-        <canvas ref={canvasRef} className="w-full h-full" style={{ display: "block" }} />
+        {/* 캔버스: fixed 부모의 100% = 뷰포트 100% */}
+        <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
 
-        {/* 오버레이 */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* 사이드 비네트 */}
           <div className="absolute inset-0"
             style={{ background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
-          {/* 상단 그라디언트 */}
           <div className="absolute top-0 inset-x-0 h-32"
             style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.4), transparent)" }} />
-          {/* 하단 그라디언트 */}
           <div className="absolute bottom-0 inset-x-0 h-40"
             style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.6), transparent)" }} />
-
-          {/* 브랜드 상단 레이블 */}
           <div className="absolute top-8 left-8">
             <p className="text-white/30 text-[10px] tracking-[0.35em] uppercase">감성도배 · 시공 스토리</p>
           </div>
-
-          {/* Before 레이블 */}
           <div ref={labelBeforeRef} className="absolute bottom-20 left-8 transition-opacity duration-500" style={{ opacity: 1 }}>
             <p className="text-white/40 text-[9px] tracking-[0.3em] uppercase mb-1">Before</p>
             <p className="text-white/70 font-black text-2xl sm:text-3xl leading-tight">시공 전</p>
           </div>
-
-          {/* After 레이블 */}
           <div ref={labelAfterRef} className="absolute bottom-20 left-8 transition-opacity duration-500" style={{ opacity: 0 }}>
-            <p className="text-[9px] tracking-[0.3em] uppercase mb-1"
-              style={{ color: "rgba(201,169,110,0.7)" }}>After</p>
+            <p className="text-[9px] tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(201,169,110,0.7)" }}>After</p>
             <p className="font-black text-2xl sm:text-3xl leading-tight"
               style={{ background: "linear-gradient(135deg, #C4714A, #C9A96E)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               감성도배 후
             </p>
           </div>
-
-          {/* 우측 프레임 카운터 */}
           <div className="absolute top-8 right-8 text-right">
             <p className="text-white/15 text-[9px] tracking-widest uppercase">Scroll to experience</p>
           </div>
-
-          {/* 하단 프로그레스 바 */}
           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/8">
             <div ref={progressBarRef} className="h-full w-0"
               style={{ background: "linear-gradient(90deg, #C4714A, #C9A96E)", transition: "width 0.05s linear" }} />
           </div>
-
-          {/* 스크롤 힌트 (첫 화면) */}
           <div className="absolute bottom-8 right-8 flex flex-col items-center gap-1.5 animate-bounce">
             <span className="text-white/20 text-[9px] tracking-[0.3em] uppercase">Scroll</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5">
@@ -477,7 +463,7 @@ function ScrollSequenceSection() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
