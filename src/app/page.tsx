@@ -629,7 +629,7 @@ function FinalCTASection({ onBooking }: { onBooking: () => void }) {
           <span className="text-[#C4714A]">결정은 나중에 해도 됩니다</span>
         </h2>
         <p className="text-[#8C7B6B] text-sm mb-10">
-          그냥 물어보세요. 사진 한 장이면 충분합니다.<br />
+          30초면 충분해요. 지금 바로 궁금한 점을 남겨주세요.<br />
           연중무휴 · 24시 접수 · 무료 현장 방문 · 무료 견적
         </p>
 
