@@ -516,7 +516,7 @@ function PainSection({ onBooking: _onBooking }: { onBooking: () => void }) {
         {/* 전환 포인트 */}
         <div className="text-center p-6 rounded-2xl" style={{ background: "linear-gradient(135deg, #C4714A, #C9A96E)" }}>
           <p className="text-white font-black text-xl mb-1">이 모든 걱정, 감성도배는 없습니다</p>
-          <p className="text-white/80 text-sm mb-5">여성 도배사의 꼼꼼한 상담으로, 처음부터 끝까지 함께합니다</p>
+          <p className="text-white/80 text-sm mb-5" style={{ wordBreak: "keep-all" }}>여성 도배사의 꼼꼼한 상담으로, 처음부터 끝까지 함께합니다</p>
           <a href={KAKAO_CHANNEL}
             className="inline-flex items-center gap-2 bg-[#FEE500] text-[#2C1A0E] font-black px-7 py-3 rounded-full text-sm hover:bg-white transition-colors shadow-lg">
             <KakaoIcon size={17} />지금 바로 확인하기
