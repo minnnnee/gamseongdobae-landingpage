@@ -483,7 +483,7 @@ function ScrollSequenceSection() {
 ══════════════════════════════════════ */
 function PainSection({ onBooking: _onBooking }: { onBooking: () => void }) {
   const pains = [
-    { icon: "💸", title: "예고 없는 추가 비용 통보", desc: "시공 중 추가 비용이 생길 수 있어요. 문제는 미리 말도 없이 공사 중간에 갑자기 청구될 때죠" },
+    { icon: "💸", title: "예고 없는 추가 비용 통보", desc: "시공 중 추가 비용이 생길 수 있어요. 문제는 사전 협의 없이 공사 중간에 갑자기 비용이 추가되는 상황입니다." },
     { icon: "😰", title: "마감 엉망 → 재시공 비용", desc: "이음새 들뜨고 모서리 벌어져서 결국 다시 불러야 하는 상황" },
     { icon: "📅", title: "일정 안 지켜 입주 미룸", desc: "약속한 날 안 나타나고, 연락도 안 되는 최악의 경험" },
     { icon: "😟", title: "내 취향 무시한 벽지 선택", desc: "전문가라며 본인 맘대로 정해버리는 일방적인 시공" },
