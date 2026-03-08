@@ -502,12 +502,16 @@ function PainSection({ onBooking: _onBooking }: { onBooking: () => void }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
           {pains.map((p) => (
-            <div key={p.title} className="p-5 rounded-2xl border border-white/8 flex gap-4"
-              style={{ background: "rgba(255,255,255,0.04)" }}>
-              <span className="text-2xl flex-shrink-0">{p.icon}</span>
+            <div key={p.title} className="p-5 rounded-2xl flex gap-4"
+              style={{
+                background: "linear-gradient(135deg, rgba(201,169,110,0.07) 0%, rgba(196,113,74,0.05) 100%)",
+                border: "1px solid rgba(201,169,110,0.18)",
+                boxShadow: "inset 0 1px 0 rgba(201,169,110,0.12)",
+              }}>
+              <span className="text-2xl flex-shrink-0 mt-0.5">{p.icon}</span>
               <div>
-                <p className="text-white font-bold text-sm mb-1">{p.title}</p>
-                <p className="text-[#5C4033] text-xs leading-relaxed">{p.desc}</p>
+                <p className="text-[#E8D5B7] font-bold text-sm mb-1">{p.title}</p>
+                <p className="text-[#A89070] text-xs leading-relaxed">{p.desc}</p>
               </div>
             </div>
           ))}
